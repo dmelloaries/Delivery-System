@@ -1,30 +1,19 @@
-import express from 'express';
-import { body } from 'express-validator';
-import userController from '../controllers/user.controller';
-import authMiddleware from '../middlewares/auth.middleware';
+import express from "express";
+import userController from "../controllers/user.controller.js";
+import { authUser } from "../middlewares/auth.middleware.js";
 
 const router = express.Router();
 
+// Authentication routes
+router.post("/register", userController.registerUser);
+router.post("/login", userController.loginUser);
+router.get("/profile", authUser, userController.getUserProfile);
+router.get("/logout", authUser, userController.logoutUser);
 
-router.post('/register', [
-    body('email').isEmail().withMessage('Invalid Email'),
-    body('fullname.firstname').isLength({ min: 3 }).withMessage('First name must be at least 3 characters long'),
-    body('password').isLength({ min: 6 }).withMessage('Password must be at least 6 characters long')
-],
-    userController.registerUser
-)
+// Order routes
+router.post("/orders", authUser, userController.createOrder);
+router.get("/orders", authUser, userController.getUserOrders);
+router.get("/orders/:orderId", authUser, userController.getOrderById);
+router.patch("/orders/:orderId/cancel", authUser, userController.cancelOrder);
 
-router.post('/login', [
-    body('email').isEmail().withMessage('Invalid Email'),
-    body('password').isLength({ min: 6 }).withMessage('Password must be at least 6 characters long')
-],
-    userController.loginUser
-)
-
-router.get('/profile', authMiddleware.authUser, userController.getUserProfile)
-
-router.get('/logout', authMiddleware.authUser, userController.logoutUser)
-
-
-
-module.exports = router;
+export default router;

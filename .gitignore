@@ -13,6 +13,7 @@ node_modules
 dist
 dist-ssr
 *.local
+socket-test-client.html
 
 # Editor directories and files
 .vscode/*
