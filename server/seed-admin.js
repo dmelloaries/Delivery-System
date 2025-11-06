@@ -10,7 +10,7 @@ const seedAdmin = async () => {
 
     // Check if admin already exists
     const existingAdmin = await adminModel.findOne({
-      email: "admin@delivery.com",
+      email: "admin@gmail.com",
     });
 
     if (existingAdmin) {
@@ -31,9 +31,9 @@ const seedAdmin = async () => {
     });
 
     console.log("Admin user created successfully:");
-    console.log("Email: admin@delivery.com");
+    console.log("Email: admin@gmail.com");
     console.log("Password: admin123");
-    console.log("\n⚠️  IMPORTANT: Change this password in production!");
+    
 
     process.exit(0);
   } catch (error) {
