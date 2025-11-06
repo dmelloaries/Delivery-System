@@ -71,7 +71,7 @@ export default function Login() {
             </CardDescription>
           </div>
 
-          <div className="grid grid-cols-3 gap-2 pt-2">
+          <div className="grid grid-cols-3 gap-2 pt-2 ">
             {userTypes.map((type) => {
               const Icon = type.icon;
               const isActive = userType === type.id;
@@ -79,7 +79,7 @@ export default function Login() {
                 <button
                   key={type.id}
                   onClick={() => setUserType(type.id)}
-                  className={`flex flex-col items-center gap-2 p-3 rounded-lg transition-all ${
+                  className={`flex flex-col items-center gap-2 p-3 cursor-pointer rounded-lg transition-all ${
                     isActive
                       ? "bg-purple-200 text-purple-900 shadow-md"
                       : "bg-gray-50 text-gray-600 hover:bg-purple-50"
@@ -102,7 +102,7 @@ export default function Login() {
               id="email"
               name="email"
               type="email"
-              placeholder="m@example.com"
+              placeholder="test@gmail.com"
               value={formData.email}
               onChange={handleInputChange}
               required
@@ -126,7 +126,7 @@ export default function Login() {
               name="password"
               type="password"
               value={formData.password}
-               placeholder="m@example.com"
+              placeholder="test@gmail.com"
               onChange={handleInputChange}
               required
               className="border-gray-200 focus:border-purple-300 focus:ring-purple-200"
