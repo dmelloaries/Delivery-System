@@ -6,6 +6,8 @@ import AdminHome from "./pages/admin/AdminHome";
 import UserHome from "./pages/user/UserHome";
 import PartnerHome from "./pages/partner/PartnerHome";
 import Register from "./pages/Register";
+import UserCart from "./pages/user/UserCart";
+import UserOrders from "./pages/user/UserOrders";
 
 function App() {
   return (
@@ -26,6 +28,18 @@ function App() {
           path="/user"
           element={
             <ProtectedRoute allowedRoles={["user"]} element={<UserHome />} />
+          }
+        />
+        <Route
+          path="/UserOrders"
+          element={
+            <ProtectedRoute allowedRoles={["user"]} element={<UserOrders />} />
+          }
+        />
+        <Route
+          path="/UserCart"
+          element={
+            <ProtectedRoute allowedRoles={["user"]} element={<UserCart />} />
           }
         />
         <Route

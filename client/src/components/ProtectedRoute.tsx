@@ -11,7 +11,7 @@ const ProtectedRoute = ({ allowedRoles, element }: ProtectedRouteProps) => {
   const userType = useUserStore((state) => state.userType);
 
   if (userType === "loggedout") {
-    return <Navigate to="/login" replace />;
+    return <Navigate to="/" replace />;
   }
 
   if (!allowedRoles.includes(userType)) {
