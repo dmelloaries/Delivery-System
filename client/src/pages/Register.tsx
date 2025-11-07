@@ -37,7 +37,7 @@ type RegisterFormData = z.infer<typeof registerSchema>;
 
 const Register = () => {
   const navigate = useNavigate();
-  const { setUserType: setStoreUserType, setToken: setStoreToken } =
+  const { setUserType: setStoreUserType, setToken: setStoreToken, setUserData: setStoreUserData } =
     useUserStore();
   const [userType, setUserType] = useState<"user" | "partner">("user");
   const [isLoading, setIsLoading] = useState(false);
@@ -116,15 +116,30 @@ const Register = () => {
 
       // Determine user role from response
       let role: UserType = "user";
+      let userData = null;
+
       if (data.partner) {
         role = "partner";
+        userData = {
+          _id: data.partner._id,
+          email: data.partner.email,
+          firstname: data.partner.fullname?.firstname || "",
+          lastname: data.partner.fullname?.lastname || "",
+        };
       } else if (data.user) {
         role = "user";
+        userData = {
+          _id: data.user._id,
+          email: data.user.email,
+          firstname: data.user.fullname?.firstname || "",
+          lastname: data.user.fullname?.lastname || "",
+        };
       }
 
       // Update Zustand store
       setStoreToken(data.token);
       setStoreUserType(role);
+      setStoreUserData(userData);
 
       // Navigate to appropriate dashboard
       if (role === "partner") {

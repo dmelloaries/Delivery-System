@@ -18,7 +18,7 @@ const backendUrl = import.meta.env.VITE_BACKEND_URL;
 
 export default function Login() {
   const navigate = useNavigate();
-  const { setUserType: setStoreUserType, setToken: setStoreToken } =
+  const { setUserType: setStoreUserType, setToken: setStoreToken, setUserData: setStoreUserData } =
     useUserStore();
   const [userType, setUserType] = useState("user");
   const [isLoading, setIsLoading] = useState(false);
@@ -71,17 +71,38 @@ export default function Login() {
 
       // Determine user role from response
       let role: UserType = "user";
+      let userData = null;
+
       if (data.admin) {
         role = "admin";
+        userData = {
+          _id: data.admin._id,
+          email: data.admin.email,
+          firstname: data.admin.fullname?.firstname || "",
+          lastname: data.admin.fullname?.lastname || "",
+        };
       } else if (data.partner) {
         role = "partner";
+        userData = {
+          _id: data.partner._id,
+          email: data.partner.email,
+          firstname: data.partner.fullname?.firstname || "",
+          lastname: data.partner.fullname?.lastname || "",
+        };
       } else if (data.user) {
         role = "user";
+        userData = {
+          _id: data.user._id,
+          email: data.user.email,
+          firstname: data.user.fullname?.firstname || "",
+          lastname: data.user.fullname?.lastname || "",
+        };
       }
 
       // Update Zustand store
       setStoreToken(data.token);
       setStoreUserType(role);
+      setStoreUserData(userData);
 
       // Navigate to appropriate dashboard
       if (role === "admin") {
