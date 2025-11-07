@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import { persist, createJSONStorage } from "zustand/middleware";
 
 export type UserType = "admin" | "partner" | "user" | "loggedout";
 
@@ -19,12 +20,23 @@ interface UserState {
   logout: () => void;
 }
 
-export const useUserStore = create<UserState>((set) => ({
-  userType: "loggedout",
-  token: null,
-  userData: null,
-  setUserType: (type) => set({ userType: type }),
-  setToken: (token) => set({ token }),
-  setUserData: (userData) => set({ userData }),
-  logout: () => set({ userType: "loggedout", token: null, userData: null }),
-}));
+export const useUserStore = create<UserState>()(
+  persist(
+    (set) => ({
+      userType: "loggedout",
+      token: null,
+      userData: null,
+      setUserType: (type) => set({ userType: type }),
+      setToken: (token) => set({ token }),
+      setUserData: (userData) => set({ userData }),
+      logout: () => {
+        localStorage.removeItem("token");
+        set({ userType: "loggedout", token: null, userData: null });
+      },
+    }),
+    {
+      name: "user-storage", // name of the item in localStorage
+      storage: createJSONStorage(() => localStorage),
+    }
+  )
+);

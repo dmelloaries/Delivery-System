@@ -1,11 +1,11 @@
-import Header from "@/components/Header";
+import UserHeader from "@/components/_user/UserHeader";
 import OffersCard from "@/components/OffersCard";
 import Products from "@/components/Products";
 
 const UserHome = () => {
   return (
     <div>
-      <Header></Header>
+      <UserHeader></UserHeader>
       <OffersCard></OffersCard>
       <Products></Products>
     </div>

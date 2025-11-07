@@ -18,8 +18,11 @@ const backendUrl = import.meta.env.VITE_BACKEND_URL;
 
 export default function Login() {
   const navigate = useNavigate();
-  const { setUserType: setStoreUserType, setToken: setStoreToken, setUserData: setStoreUserData } =
-    useUserStore();
+  const {
+    setUserType: setStoreUserType,
+    setToken: setStoreToken,
+    setUserData: setStoreUserData,
+  } = useUserStore();
   const [userType, setUserType] = useState("user");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");

@@ -3,6 +3,7 @@ import blackfriday from "../assets/black-friday.png";
 import discount from "../assets/discount.png";
 import check from "../assets/check.png";
 import { SparklesText } from "@/components/ui/sparkles-text";
+import { HyperText } from "./ui/hyper-text";
 
 const OffersCard = () => {
   return (
@@ -46,28 +47,19 @@ const OffersCard = () => {
             <span className="flex justify-between px-4">
               <span className="flex">
                 <img src={check} className="h-9 w-9 ml-4 " />
-                <SparklesText
-                  sparklesCount={0}
-                  className="text-purple-600 text-xl"
-                >
+                <HyperText className="text-purple-600 text-xl">
                   ₹0 handling Fees
-                </SparklesText>
+                </HyperText>
 
                 <img src={check} className="h-9 w-9 ml-4 " />
-                <SparklesText
-                  sparklesCount={0}
-                  className="text-purple-600 text-xl"
-                >
+                <HyperText className="text-purple-600 text-xl">
                   ₹0 Delivery Fees
-                </SparklesText>
+                </HyperText>
 
                 <img src={check} className="h-9 w-9 ml-4 " />
-                <SparklesText
-                  sparklesCount={0}
-                  className="text-purple-600 text-xl"
-                >
+                <HyperText className="text-purple-600 text-xl">
                   ₹0 Rain & Surge Fees
-                </SparklesText>
+                </HyperText>
               </span>
 
               <CardFooter className="flex justify-center md:justify-end p-4">

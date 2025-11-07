@@ -37,8 +37,11 @@ type RegisterFormData = z.infer<typeof registerSchema>;
 
 const Register = () => {
   const navigate = useNavigate();
-  const { setUserType: setStoreUserType, setToken: setStoreToken, setUserData: setStoreUserData } =
-    useUserStore();
+  const {
+    setUserType: setStoreUserType,
+    setToken: setStoreToken,
+    setUserData: setStoreUserData,
+  } = useUserStore();
   const [userType, setUserType] = useState<"user" | "partner">("user");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
@@ -175,7 +178,7 @@ const Register = () => {
       <Card className="w-full max-w-md shadow-lg border border-purple-100">
         <CardHeader className="space-y-4">
           <div className="space-y-2">
-            <CardTitle className="text-2xl font-bold text-gray-900">
+            <CardTitle className="text-2xl cursor-pointer font-bold text-gray-900">
               Create Account
             </CardTitle>
             <CardDescription className="text-gray-600">
@@ -322,7 +325,7 @@ const Register = () => {
           <Button
             onClick={handleSubmit}
             disabled={isLoading}
-            className="w-full bg-purple-600 hover:bg-purple-700 text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full bg-purple-600 hover:bg-purple-700 cursor-pointer text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isLoading ? "Creating Account..." : "Create Account"}
           </Button>
