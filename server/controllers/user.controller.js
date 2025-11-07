@@ -158,13 +158,33 @@ export const createOrder = async (req, res) => {
       status: "Pending",
     });
 
-    // Emit socket event for new order (will be handled in socket.js)
+    // Populate order for socket emission
+    await order.populate("user", "fullname email");
+
+    // Emit socket event for new order to all partners
     if (req.io) {
-      req.io.emit("new-order", {
+      req.io.to("partners-room").emit("new-order", {
         orderId: order._id,
         orderNumber: order.orderNumber,
         totalAmount: order.totalAmount,
         status: order.status,
+        items: order.items,
+        user: {
+          _id: order.user._id,
+          fullname: order.user.fullname,
+        },
+        createdAt: order.createdAt,
+        timestamp: new Date(),
+        message: "New order available!",
+      });
+
+      // Notify the user that order is created and waiting for partner
+      req.io.to(`user-${req.user._id}`).emit("order-created", {
+        orderId: order._id,
+        orderNumber: order.orderNumber,
+        status: order.status,
+        message: "Order created successfully. Waiting for partner to accept...",
+        timestamp: new Date(),
       });
     }
 
@@ -236,16 +256,29 @@ export const cancelOrder = async (req, res) => {
 
     // Emit socket event for order cancellation
     if (req.io) {
+      // Notify user
       req.io.to(`order-${order._id}`).emit("order-status-update", {
         orderId: order._id,
+        orderNumber: order.orderNumber,
         status: order.status,
-        message: "Order has been cancelled by user",
+        message: "Order has been cancelled",
+        timestamp: new Date(),
       });
 
+      req.io.to(`user-${req.user._id}`).emit("order-cancelled", {
+        orderId: order._id,
+        orderNumber: order.orderNumber,
+        message: "Your order has been cancelled successfully",
+        timestamp: new Date(),
+      });
+
+      // Notify partner if assigned
       if (order.partner) {
         req.io.to(`partner-${order.partner}`).emit("order-cancelled", {
           orderId: order._id,
           orderNumber: order.orderNumber,
+          message: "Order has been cancelled by the customer",
+          timestamp: new Date(),
         });
       }
     }

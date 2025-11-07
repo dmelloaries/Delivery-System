@@ -9,6 +9,8 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { HyperText } from "./ui/hyper-text";
+import Footer from "./Footer";
 
 type StoreProduct = {
   id: number;
@@ -90,7 +92,9 @@ const Products = () => {
   if (loading) {
     return (
       <section className="space-y-4">
-        <h2 className="text-xl font-semibold">Featured Products</h2>
+        <HyperText className="text-xl text-purple-400 px-4">
+          Featured Products
+        </HyperText>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
           {Array.from({ length: 6 }).map((_, index) => (
             <Card
@@ -113,7 +117,9 @@ const Products = () => {
   if (error) {
     return (
       <section className="space-y-2">
-        <h2 className="text-xl font-semibold">Featured Products</h2>
+        <HyperText className="text-3xl text-purple-400 px-4">
+          Featured Products
+        </HyperText>
         <p className="text-sm text-destructive">{error}</p>
       </section>
     );
@@ -125,9 +131,9 @@ const Products = () => {
 
   return (
     <section className="space-y-4 px-4">
-      <h2 className="text-xl font-semibold mt-6 ml-6 text-purple-600">
+      <HyperText className="text-xl text-purple-400 px-4">
         Featured Products
-      </h2>
+      </HyperText>
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
         {featuredProducts.map((product) => {
           const currentPrice = toInr(product.price);
@@ -192,6 +198,7 @@ const Products = () => {
           );
         })}
       </div>
+      <Footer />
     </section>
   );
 };

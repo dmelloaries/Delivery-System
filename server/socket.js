@@ -2,6 +2,7 @@ import { Server } from "socket.io";
 import jwt from "jsonwebtoken";
 import userModel from "./models/user.model.js";
 import partnerModel from "./models/partner.model.js";
+import orderModel from "./models/order.model.js";
 
 let io;
 
@@ -80,15 +81,218 @@ export const initSocket = (server) => {
       console.log(`Partner ${socket.userId} joined partners room`);
     }
 
+    // Handle order locking request
+    socket.on("request-order-lock", async (data) => {
+      try {
+        const { orderId } = data;
+        const LOCK_DURATION = 30000; // 30 seconds to accept
+
+        // Find the order
+        const order = await orderModel.findById(orderId);
+
+        if (!order) {
+          socket.emit("order-lock-failed", {
+            orderId,
+            message: "Order not found",
+          });
+          return;
+        }
+
+        // Check if order is already claimed or locked by someone else
+        if (order.partner && order.status !== "Pending") {
+          socket.emit("order-lock-failed", {
+            orderId,
+            message: "Order already accepted by another partner",
+          });
+          return;
+        }
+
+        // Check if order is locked by another partner
+        if (
+          order.isLocked &&
+          order.lockedBy &&
+          order.lockedBy.toString() !== socket.userId &&
+          order.lockExpiry > new Date()
+        ) {
+          socket.emit("order-lock-failed", {
+            orderId,
+            message: "Order is currently being reviewed by another partner",
+          });
+          return;
+        }
+
+        // Lock the order
+        order.isLocked = true;
+        order.lockedBy = socket.userId;
+        order.lockedAt = new Date();
+        order.lockExpiry = new Date(Date.now() + LOCK_DURATION);
+        await order.save();
+
+        // Notify the partner who locked the order
+        socket.emit("order-locked", {
+          orderId,
+          lockExpiry: order.lockExpiry,
+          message: "Order locked for 30 seconds. Please accept or decline.",
+        });
+
+        // Notify other partners that this order is temporarily unavailable
+        socket.to("partners-room").emit("order-temporarily-locked", {
+          orderId,
+          lockedBy: socket.userId,
+        });
+
+        // Set timeout to release lock if not accepted
+        setTimeout(async () => {
+          const lockedOrder = await orderModel.findById(orderId);
+          if (
+            lockedOrder &&
+            lockedOrder.isLocked &&
+            lockedOrder.status === "Pending" &&
+            lockedOrder.lockedBy.toString() === socket.userId
+          ) {
+            lockedOrder.isLocked = false;
+            lockedOrder.lockedBy = null;
+            lockedOrder.lockedAt = null;
+            lockedOrder.lockExpiry = null;
+            await lockedOrder.save();
+
+            socket.emit("order-lock-expired", { orderId });
+            io.to("partners-room").emit("order-lock-released", { orderId });
+          }
+        }, LOCK_DURATION);
+      } catch (error) {
+        console.error("Error locking order:", error);
+        socket.emit("order-lock-failed", {
+          orderId: data.orderId,
+          message: "Failed to lock order",
+        });
+      }
+    });
+
+    // Handle order acceptance confirmation
+    socket.on("confirm-order-acceptance", async (data) => {
+      try {
+        const { orderId } = data;
+
+        const order = await orderModel.findById(orderId);
+
+        if (!order) {
+          socket.emit("order-acceptance-failed", {
+            orderId,
+            message: "Order not found",
+          });
+          return;
+        }
+
+        // Verify the partner has the lock
+        if (
+          !order.isLocked ||
+          order.lockedBy.toString() !== socket.userId ||
+          order.lockExpiry < new Date()
+        ) {
+          socket.emit("order-acceptance-failed", {
+            orderId,
+            message: "Lock expired or invalid",
+          });
+          return;
+        }
+
+        // Update order
+        order.partner = socket.userId;
+        order.status = "Accepted";
+        order.isLocked = false;
+        order.lockedBy = null;
+        order.lockedAt = null;
+        order.lockExpiry = null;
+        await order.save();
+
+        // Notify the accepting partner
+        socket.emit("order-accepted-success", {
+          orderId,
+          message: "Order accepted successfully",
+        });
+
+        // Notify the customer
+        io.to(`order-${orderId}`).emit("order-status-update", {
+          orderId: order._id,
+          orderNumber: order.orderNumber,
+          status: order.status,
+          partner: socket.userId,
+          message: "Your order has been accepted by a partner",
+          timestamp: new Date(),
+        });
+
+        // Notify other partners
+        socket.to("partners-room").emit("order-claimed", {
+          orderId,
+          partnerId: socket.userId,
+        });
+      } catch (error) {
+        console.error("Error accepting order:", error);
+        socket.emit("order-acceptance-failed", {
+          orderId: data.orderId,
+          message: "Failed to accept order",
+        });
+      }
+    });
+
+    // Handle order decline
+    socket.on("decline-order", async (data) => {
+      try {
+        const { orderId } = data;
+
+        const order = await orderModel.findById(orderId);
+
+        if (!order) {
+          return;
+        }
+
+        // Release lock if this partner has it
+        if (
+          order.isLocked &&
+          order.lockedBy &&
+          order.lockedBy.toString() === socket.userId
+        ) {
+          order.isLocked = false;
+          order.lockedBy = null;
+          order.lockedAt = null;
+          order.lockExpiry = null;
+          await order.save();
+
+          socket.emit("order-declined", { orderId });
+          io.to("partners-room").emit("order-lock-released", { orderId });
+        }
+      } catch (error) {
+        console.error("Error declining order:", error);
+      }
+    });
+
     // Handle partner location updates (for real-time tracking)
-    socket.on("partner-location-update", (data) => {
-      const { orderId, location } = data;
-      // Broadcast location to users tracking this order
-      socket.to(`order-${orderId}`).emit("partner-location", {
-        orderId,
-        location,
-        partnerId: socket.userId,
-      });
+    socket.on("partner-location-update", async (data) => {
+      try {
+        const { orderId, location } = data;
+
+        // Broadcast location to users tracking this order
+        socket.to(`order-${orderId}`).emit("partner-location", {
+          orderId,
+          location,
+          partnerId: socket.userId,
+          timestamp: new Date(),
+        });
+
+        // Also broadcast to user's personal room
+        const order = await orderModel.findById(orderId);
+        if (order) {
+          io.to(`user-${order.user}`).emit("partner-location", {
+            orderId,
+            location,
+            partnerId: socket.userId,
+            timestamp: new Date(),
+          });
+        }
+      } catch (error) {
+        console.error("Error updating partner location:", error);
+      }
     });
 
     // Handle typing/status indicators
@@ -136,25 +340,82 @@ export const getIO = () => {
 // Helper functions to emit events
 export const emitNewOrder = (orderData) => {
   if (io) {
-    io.to("partners-room").emit("new-order", orderData);
+    io.to("partners-room").emit("new-order", {
+      ...orderData,
+      timestamp: new Date(),
+      message: "New order available!",
+    });
   }
 };
 
-export const emitOrderStatusUpdate = (orderId, statusData) => {
+export const emitOrderStatusUpdate = (orderId, userId, statusData) => {
   if (io) {
-    io.to(`order-${orderId}`).emit("order-status-update", statusData);
+    // Emit to the order room
+    io.to(`order-${orderId}`).emit("order-status-update", {
+      ...statusData,
+      orderId,
+      timestamp: new Date(),
+    });
+
+    // Also emit to user's personal room
+    if (userId) {
+      io.to(`user-${userId}`).emit("order-status-update", {
+        ...statusData,
+        orderId,
+        timestamp: new Date(),
+      });
+    }
   }
 };
 
 export const emitOrderClaimed = (orderData) => {
   if (io) {
-    io.emit("order-claimed", orderData);
+    // Notify all partners that order is no longer available
+    io.to("partners-room").emit("order-claimed", {
+      ...orderData,
+      timestamp: new Date(),
+    });
   }
 };
 
-export const emitOrderCancelled = (partnerId, orderData) => {
+export const emitOrderCancelled = (partnerId, userId, orderData) => {
   if (io) {
-    io.to(`partner-${partnerId}`).emit("order-cancelled", orderData);
+    // Notify the partner
+    if (partnerId) {
+      io.to(`partner-${partnerId}`).emit("order-cancelled", {
+        ...orderData,
+        timestamp: new Date(),
+        message: "Order has been cancelled by the customer",
+      });
+    }
+
+    // Notify the user
+    if (userId) {
+      io.to(`user-${userId}`).emit("order-cancelled", {
+        ...orderData,
+        timestamp: new Date(),
+        message: "Your order has been cancelled",
+      });
+    }
+  }
+};
+
+export const emitPartnerStatusUpdate = (orderId, userId, statusData) => {
+  if (io) {
+    // Real-time status updates for customers
+    io.to(`order-${orderId}`).emit("delivery-status-update", {
+      ...statusData,
+      orderId,
+      timestamp: new Date(),
+    });
+
+    if (userId) {
+      io.to(`user-${userId}`).emit("delivery-status-update", {
+        ...statusData,
+        orderId,
+        timestamp: new Date(),
+      });
+    }
   }
 };
 
@@ -165,4 +426,5 @@ export default {
   emitOrderStatusUpdate,
   emitOrderClaimed,
   emitOrderCancelled,
+  emitPartnerStatusUpdate,
 };

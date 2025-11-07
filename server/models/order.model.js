@@ -55,6 +55,24 @@ const orderSchema = new mongoose.Schema(
       enum: ["Pending", "Completed", "Failed"],
       default: "Pending",
     },
+    // Order locking fields
+    isLocked: {
+      type: Boolean,
+      default: false,
+    },
+    lockedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "partner",
+      default: null,
+    },
+    lockedAt: {
+      type: Date,
+      default: null,
+    },
+    lockExpiry: {
+      type: Date,
+      default: null,
+    },
   },
   {
     timestamps: true,

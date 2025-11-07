@@ -1,12 +1,12 @@
 import React from "react";
-import { SparklesText } from "./ui/sparkles-text";
+import { HyperText } from "@/components/ui/hyper-text";
 
 const Footer = () => {
   return (
     <div className="py-4">
-      <SparklesText className="text-3xl text-purple-400 px-4">
+      <HyperText className="text-3xl text-purple-400 px-4">
         Delivery System- by Aries Dmello
-      </SparklesText>
+      </HyperText>
     </div>
   );
 };

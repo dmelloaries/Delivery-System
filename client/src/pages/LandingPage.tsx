@@ -1,4 +1,3 @@
-import Footer from "@/components/Footer";
 import Header from "@/components/Header";
 
 import OffersCard from "@/components/OffersCard";
@@ -10,7 +9,6 @@ const Landing = () => {
       <Header></Header>
       <OffersCard></OffersCard>
       <Products></Products>
-      <Footer></Footer>
     </div>
   );
 };

@@ -158,11 +158,13 @@ export const claimOrder = async (req, res) => {
   try {
     const { orderId } = req.params;
 
-    const order = await orderModel.findOne({
-      _id: orderId,
-      status: "Pending",
-      partner: null,
-    });
+    const order = await orderModel
+      .findOne({
+        _id: orderId,
+        status: "Pending",
+        partner: null,
+      })
+      .populate("user", "fullname email");
 
     if (!order) {
       return res.status(404).json({
@@ -170,8 +172,26 @@ export const claimOrder = async (req, res) => {
       });
     }
 
+    // Check if order is locked by another partner
+    if (
+      order.isLocked &&
+      order.lockedBy &&
+      order.lockedBy.toString() !== req.partner._id.toString() &&
+      order.lockExpiry > new Date()
+    ) {
+      return res.status(409).json({
+        message: "Order is currently being reviewed by another partner",
+        lockedUntil: order.lockExpiry,
+      });
+    }
+
+    // Claim the order
     order.partner = req.partner._id;
     order.status = "Accepted";
+    order.isLocked = false;
+    order.lockedBy = null;
+    order.lockedAt = null;
+    order.lockExpiry = null;
     await order.save();
 
     // Update partner status to active
@@ -180,21 +200,39 @@ export const claimOrder = async (req, res) => {
       await req.partner.save();
     }
 
-    // Emit socket event
+    // Emit socket events
     if (req.io) {
+      // Notify the customer
       req.io.to(`order-${order._id}`).emit("order-status-update", {
         orderId: order._id,
+        orderNumber: order.orderNumber,
         status: order.status,
         partner: {
           _id: req.partner._id,
           fullname: req.partner.fullname,
         },
         message: "Your order has been accepted by a partner",
+        timestamp: new Date(),
       });
 
-      req.io.emit("order-claimed", {
+      req.io.to(`user-${order.user._id}`).emit("order-status-update", {
+        orderId: order._id,
+        orderNumber: order.orderNumber,
+        status: order.status,
+        partner: {
+          _id: req.partner._id,
+          fullname: req.partner.fullname,
+        },
+        message:
+          "Your order has been accepted! Partner is preparing your order.",
+        timestamp: new Date(),
+      });
+
+      // Notify all partners that order is claimed
+      req.io.to("partners-room").emit("order-claimed", {
         orderId: order._id,
         partnerId: req.partner._id,
+        timestamp: new Date(),
       });
     }
 
@@ -285,15 +323,49 @@ export const updateOrderStatus = async (req, res) => {
         req.partner.status = "inactive";
         await req.partner.save();
       }
+
+      // Mark payment as completed
+      order.paymentStatus = "Completed";
+      await order.save();
     }
 
-    // Emit socket event
+    // Emit socket events with detailed information
     if (req.io) {
+      const statusMessages = {
+        "On The Way":
+          "Great news! Your order is on the way and will arrive soon!",
+        Delivered:
+          "Your order has been delivered successfully. Enjoy your meal!",
+        Cancelled: "Your order has been cancelled by the partner.",
+      };
+
+      // Notify the customer in order room
       req.io.to(`order-${order._id}`).emit("order-status-update", {
         orderId: order._id,
+        orderNumber: order.orderNumber,
         status: order.status,
-        message: `Your order is now ${status}`,
+        message: statusMessages[status] || `Your order is now ${status}`,
+        timestamp: new Date(),
       });
+
+      // Notify customer in their personal room
+      req.io.to(`user-${order.user}`).emit("order-status-update", {
+        orderId: order._id,
+        orderNumber: order.orderNumber,
+        status: order.status,
+        message: statusMessages[status] || `Your order is now ${status}`,
+        timestamp: new Date(),
+      });
+
+      // If delivered, send a special completion notification
+      if (status === "Delivered") {
+        req.io.to(`user-${order.user}`).emit("order-delivered", {
+          orderId: order._id,
+          orderNumber: order.orderNumber,
+          message: "Thank you for your order! We hope you enjoy it!",
+          timestamp: new Date(),
+        });
+      }
     }
 
     res.json({
