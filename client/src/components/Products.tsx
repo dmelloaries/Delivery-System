@@ -11,6 +11,8 @@ import {
 import { Button } from "@/components/ui/button";
 import { HyperText } from "./ui/hyper-text";
 import Footer from "./Footer";
+import { useCartStore } from "@/context/useCartStore";
+import { toast } from "sonner";
 
 type StoreProduct = {
   id: number;
@@ -50,6 +52,20 @@ const Products = () => {
   const [products, setProducts] = useState<StoreProduct[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const { addItem } = useCartStore();
+
+  const handleAddToCart = (product: StoreProduct) => {
+    addItem({
+      id: product.id,
+      title: product.title,
+      price: product.price,
+      image: product.image,
+      category: product.category,
+    });
+    toast.success(`${product.title} added to cart!`, {
+      duration: 2000,
+    });
+  };
 
   useEffect(() => {
     const controller = new AbortController();
@@ -158,6 +174,7 @@ const Products = () => {
                     size="sm"
                     variant="secondary"
                     className="absolute cursor-pointer bottom-3 right-3 rounded-full border border-primary bg-background px-5 text-primary hover:bg-primary/10"
+                    onClick={() => handleAddToCart(product)}
                   >
                     ADD
                   </Button>

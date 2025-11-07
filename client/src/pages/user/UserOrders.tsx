@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
+import UserHeader from "@/components/_user/UserHeader";
 
 interface OrderItem {
   id: number;
@@ -149,15 +150,16 @@ const UserOrders = () => {
 
   return (
     <div className="container mx-auto p-6">
+      <UserHeader />
       <Button
         variant="ghost"
         onClick={() => navigate("/user")}
-        className="mb-4 flex items-center gap-2 cursor-pointer hover:bg-purple-200/30"
+        className="mb-4 flex items-center gap-2 cursor-pointer mt-3 hover:bg-purple-200/30"
       >
         <ArrowLeft className="w-4 h-4" />
         Back to Home
       </Button>
-      <HyperText className="text-3xl font-bold mb-6">My Orders</HyperText>
+      <HyperText className="text-3xl mb-6 text-purple-400">My Orders</HyperText>
 
       {orders.length === 0 ? (
         <div className="text-center py-10 text-gray-500">
