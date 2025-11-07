@@ -21,13 +21,11 @@ export default function Login() {
   const { setUserType: setStoreUserType, setToken: setStoreToken } =
     useUserStore();
   const [userType, setUserType] = useState("user");
-  const [isSignUp, setIsSignUp] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const [formData, setFormData] = useState({
     email: "",
     password: "",
-    confirmPassword: "",
   });
 
   const handleInputChange = (e: any) => {
@@ -128,12 +126,10 @@ export default function Login() {
         <CardHeader className="space-y-4">
           <div className="space-y-2">
             <CardTitle className="text-2xl font-bold text-gray-900">
-              {isSignUp ? "Create Account" : "Welcome Back"}
+              Welcome Back
             </CardTitle>
             <CardDescription className="text-gray-600">
-              {isSignUp
-                ? "Choose your role and register"
-                : "Choose your role and sign in"}
+              Choose your role and sign in
             </CardDescription>
           </div>
 
@@ -168,7 +164,7 @@ export default function Login() {
               id="email"
               name="email"
               type="email"
-              placeholder="test@gmail.com"
+              placeholder="dmelloaries@gmail.com"
               value={formData.email}
               onChange={handleInputChange}
               required
@@ -181,40 +177,21 @@ export default function Login() {
               <Label htmlFor="password" className="text-gray-700">
                 Password
               </Label>
-              {!isSignUp && (
-                <a className="text-sm text-purple-600 cursor-pointer hover:text-purple-700 underline-offset-2 hover:underline">
-                  Forgot password?
-                </a>
-              )}
+              <a className="text-sm text-purple-600 cursor-pointer hover:text-purple-700 underline-offset-2 hover:underline">
+                Forgot password?
+              </a>
             </div>
             <Input
               id="password"
               name="password"
               type="password"
               value={formData.password}
-              placeholder="test@gmail.com"
+              placeholder="Enter your password"
               onChange={handleInputChange}
               required
               className="border-gray-200 focus:border-purple-300 focus:ring-purple-200"
             />
           </div>
-
-          {isSignUp && (
-            <div className="space-y-2">
-              <Label htmlFor="confirmPassword" className="text-gray-700">
-                Confirm Password
-              </Label>
-              <Input
-                id="confirmPassword"
-                name="confirmPassword"
-                type="password"
-                value={formData.confirmPassword}
-                onChange={handleInputChange}
-                required
-                className="border-gray-200 focus:border-purple-300 focus:ring-purple-200"
-              />
-            </div>
-          )}
         </CardContent>
 
         <CardFooter className="flex flex-col gap-3">
@@ -227,22 +204,19 @@ export default function Login() {
           <Button
             onClick={handleSubmit}
             disabled={isLoading}
-            className="w-full bg-purple-600 hover:bg-purple-700 text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full bg-purple-600 hover:bg-purple-700 text-white transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {isLoading ? "Loading..." : isSignUp ? "Create Account" : "Sign In"}
+            {isLoading ? "Loading..." : "Sign In"}
           </Button>
 
           <div className="flex items-center gap-2 text-sm text-gray-600">
-            {isSignUp ? "Already have an account?" : "Don't have an account?"}
+            Don't have an account?
             <button
               type="button"
-              onClick={() => {
-                setIsSignUp(!isSignUp);
-                setFormData({ email: "", password: "", confirmPassword: "" });
-              }}
-              className="text-purple-600 font-semibold hover:text-purple-700 underline-offset-2 hover:underline"
+              onClick={() => navigate("/register")}
+              className="text-purple-600 font-semibold cursor-pointer hover:text-purple-700 underline-offset-2 hover:underline"
             >
-              {isSignUp ? "Sign In" : "Register"}
+              Register
             </button>
           </div>
         </CardFooter>

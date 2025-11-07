@@ -6,6 +6,7 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import AdminHome from "./pages/admin/AdminHome";
 import UserHome from "./pages/user/UserHome";
 import PartnerHome from "./pages/partner/PartnerHome";
+import Register from "./pages/Register";
 
 function App() {
   return (
@@ -13,6 +14,7 @@ function App() {
       <Routes>
         <Route path="/" element={<Landing />} />
         <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
 
         {/* Role-based Protected Routes */}
         <Route

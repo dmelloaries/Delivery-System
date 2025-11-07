@@ -1,9 +1,13 @@
-import React from "react";
+import Header from "@/components/Header";
+import OffersCard from "@/components/OffersCard";
+import Products from "@/components/Products";
 
 const UserHome = () => {
   return (
     <div>
-      <h1> This is Userhome</h1>
+      <Header></Header>
+      <OffersCard></OffersCard>
+      <Products></Products>
     </div>
   );
 };
