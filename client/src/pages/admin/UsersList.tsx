@@ -7,10 +7,12 @@ import { useNavigate } from "react-router-dom";
 
 interface User {
   _id: string;
-  fullname: {
-    firstname: string;
-    lastname: string;
-  } | string;
+  fullname:
+    | {
+        firstname: string;
+        lastname: string;
+      }
+    | string;
   email: string;
   isActive: boolean;
   createdAt: string;
@@ -76,8 +78,8 @@ const UsersList = () => {
     });
   };
 
-  const getUserFullName = (fullname: User['fullname']) => {
-    if (typeof fullname === 'string') {
+  const getUserFullName = (fullname: User["fullname"]) => {
+    if (typeof fullname === "string") {
       return fullname;
     }
     return `${fullname.firstname} ${fullname.lastname}`;
@@ -150,9 +152,7 @@ const UsersList = () => {
                 {user.socketId && (
                   <div>
                     <p className="text-sm text-gray-500">Connection Status</p>
-                    <p className="text-sm font-medium text-green-700">
-                      Online
-                    </p>
+                    <p className="text-sm font-medium text-green-700">Online</p>
                   </div>
                 )}
                 <div className="grid grid-cols-2 gap-2">
