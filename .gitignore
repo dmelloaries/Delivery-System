@@ -1,4 +1,6 @@
 .env
+.env.local
+.env.*.local
 
 # Logs
 logs
@@ -25,3 +27,7 @@ socket-test-client.html
 *.njsproj
 *.sln
 *.sw?
+
+# Docker
+docker-compose.override.yml
+.docker

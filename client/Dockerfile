@@ -12,6 +12,10 @@ RUN yarn install --frozen-lockfile
 # Copy all source files
 COPY . .
 
+# Build argument for backend URL
+ARG VITE_BACKEND_URL=http://localhost:8000
+ENV VITE_BACKEND_URL=$VITE_BACKEND_URL
+
 # Build the application
 RUN yarn build
 
