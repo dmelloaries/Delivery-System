@@ -10,7 +10,7 @@ const OffersCard = () => {
     <div>
       <div>
         <div className="px-6 mt-4">
-          <Card className="bg-gradient-to-r from-purple-50 to-purple-100">
+          <Card className="bg-linear-to-r from-purple-50 to-purple-100">
             <CardContent className="flex flex-col md:flex-row items-center justify-between gap-4 p-4">
               <img
                 src={discount}

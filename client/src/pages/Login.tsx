@@ -145,7 +145,7 @@ export default function Login() {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-white via-purple-50 to-white flex items-center justify-center p-4">
+    <div className="min-h-screen bg-linear-to-br from-white via-purple-50 to-white flex items-center justify-center p-4">
       <Card className="w-full max-w-md shadow-lg border border-purple-100">
         <CardHeader className="space-y-4">
           <div className="space-y-2">

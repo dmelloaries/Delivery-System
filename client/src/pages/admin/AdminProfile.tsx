@@ -8,7 +8,6 @@ import { ArrowLeft } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 interface AdminData {
-  _id: string;
   fullname: {
     firstname: string;
     lastname: string;
@@ -55,7 +54,7 @@ const AdminProfile = () => {
   }, [backendUrl, token]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-purple-50">
+    <div className="min-h-screen bg-linear-to-br from-purple-50 via-white to-purple-50">
       <AdminHeader />
 
       <div className="container mx-auto px-4 py-8 max-w-4xl">
@@ -104,7 +103,7 @@ const AdminProfile = () => {
           <div className="space-y-6">
             {/* Profile Overview Card */}
             <Card className="border-purple-200 shadow-lg hover:shadow-xl transition-shadow duration-300">
-              <CardHeader className="bg-gradient-to-r from-purple-100 to-purple-50 border-b border-purple-200">
+              <CardHeader className="bg-linear-to-r from-purple-100 to-purple-50 border-b border-purple-200">
                 <CardTitle className="text-2xl text-purple-900">
                   Profile Information
                 </CardTitle>
@@ -112,7 +111,7 @@ const AdminProfile = () => {
               <CardContent className="space-y-6 pt-6">
                 {/* Name Section */}
                 <div className="flex items-start space-x-4 p-4 rounded-lg bg-purple-50 border border-purple-100">
-                  <div className="flex-shrink-0">
+                  <div className="shrink-0">
                     <div className="w-12 h-12 rounded-full bg-purple-200 flex items-center justify-center">
                       <svg
                         className="w-6 h-6 text-purple-700"
@@ -129,7 +128,7 @@ const AdminProfile = () => {
                       </svg>
                     </div>
                   </div>
-                  <div className="flex-grow">
+                  <div className="grow">
                     <h3 className="text-sm font-medium text-gray-600 mb-1">
                       Full Name
                     </h3>
@@ -142,7 +141,7 @@ const AdminProfile = () => {
 
                 {/* Email Section */}
                 <div className="flex items-start space-x-4 p-4 rounded-lg bg-purple-50 border border-purple-100">
-                  <div className="flex-shrink-0">
+                  <div className="shrink-0">
                     <div className="w-12 h-12 rounded-full bg-purple-200 flex items-center justify-center">
                       <svg
                         className="w-6 h-6 text-purple-700"
@@ -159,7 +158,7 @@ const AdminProfile = () => {
                       </svg>
                     </div>
                   </div>
-                  <div className="flex-grow">
+                  <div className="grow">
                     <h3 className="text-sm font-medium text-gray-600 mb-1">
                       Email Address
                     </h3>
@@ -171,7 +170,7 @@ const AdminProfile = () => {
 
                 {/* Role Section */}
                 <div className="flex items-start space-x-4 p-4 rounded-lg bg-purple-50 border border-purple-100">
-                  <div className="flex-shrink-0">
+                  <div className="shrink-0">
                     <div className="w-12 h-12 rounded-full bg-purple-200 flex items-center justify-center">
                       <svg
                         className="w-6 h-6 text-purple-700"
@@ -188,7 +187,7 @@ const AdminProfile = () => {
                       </svg>
                     </div>
                   </div>
-                  <div className="flex-grow">
+                  <div className="grow">
                     <h3 className="text-sm font-medium text-gray-600 mb-1">
                       Role
                     </h3>

@@ -9,6 +9,9 @@ import Register from "./pages/Register";
 import UserCart from "./pages/user/UserCart";
 import UserOrders from "./pages/user/UserOrders";
 import AdminProfile from "./pages/admin/AdminProfile";
+import UsersList from "./pages/admin/UsersList";
+import PartnersList from "./pages/admin/PartnersList";
+import OrdersList from "./pages/admin/OrdersList";
 
 function App() {
   return (
@@ -32,6 +35,30 @@ function App() {
               allowedRoles={["admin"]}
               element={<AdminProfile />}
             />
+          }
+        />
+
+        <Route
+          path="/UsersList"
+          element={
+            <ProtectedRoute allowedRoles={["admin"]} element={<UsersList />} />
+          }
+        />
+
+        <Route
+          path="/PartnersList"
+          element={
+            <ProtectedRoute
+              allowedRoles={["admin"]}
+              element={<PartnersList />}
+            />
+          }
+        />
+
+        <Route
+          path="/OrdersList"
+          element={
+            <ProtectedRoute allowedRoles={["admin"]} element={<OrdersList />} />
           }
         />
         <Route
