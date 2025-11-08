@@ -12,6 +12,7 @@ import AdminProfile from "./pages/admin/AdminProfile";
 import UsersList from "./pages/admin/UsersList";
 import PartnersList from "./pages/admin/PartnersList";
 import OrdersList from "./pages/admin/OrdersList";
+import PartnerOrders from "./pages/partner/PartnerOrders";
 
 function App() {
   return (
@@ -85,6 +86,16 @@ function App() {
             <ProtectedRoute
               allowedRoles={["partner"]}
               element={<PartnerHome />}
+            />
+          }
+        />
+
+        <Route
+          path="/PartnerOrders"
+          element={
+            <ProtectedRoute
+              allowedRoles={["partner"]}
+              element={<PartnerOrders />}
             />
           }
         />
