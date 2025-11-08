@@ -26,7 +26,7 @@ const seedAdmin = async () => {
         firstname: "Admin",
         lastname: "User",
       },
-      email: "admin@delivery.com",
+      email: "admin@gmail.com",
       password: hashedPassword,
     });
 
