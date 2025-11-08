@@ -207,7 +207,9 @@ const UserOrders = () => {
       console.log(`   Active orders to track: ${activeOrders.length}`);
 
       activeOrders.forEach((order) => {
-        console.log(` Joining room for order: ${order._id} (Status: ${order.status})`);
+        console.log(
+          ` Joining room for order: ${order._id} (Status: ${order.status})`
+        );
         socketService.joinOrderRoom(order._id);
       });
     };

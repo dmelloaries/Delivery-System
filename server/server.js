@@ -8,14 +8,13 @@ const PORT = process.env.PORT || 3000;
 // Create HTTP server
 const server = http.createServer(app);
 
-// Initialize Socket.IO 
+// Initialize Socket.IO
 const io = initSocket(server);
 
-// Setup routes with io instance 
+// Setup routes with io instance
 setupRoutes(io);
 
 server.listen(PORT, () => {
   console.log(`Server is running on PORT: ${PORT}`);
   console.log(`Socket.IO server is ready`);
-  
 });
