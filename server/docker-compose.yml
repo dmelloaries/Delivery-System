@@ -1,0 +1,46 @@
+services:
+  mongodb:
+    image: mongo:7.0
+    container_name: delivery-system-mongodb
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_DATABASE: delivery-system
+    volumes:
+      - mongodb_data:/data/db
+    networks:
+      - delivery-network
+    healthcheck:
+      test: echo 'db.runCommand("ping").ok' | mongosh localhost:27017/test --quiet
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  server:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: delivery-system-server
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      PORT: 8000
+      MONGODB_URI: mongodb://mongodb:27017/delivery-system
+      JWT_SECRET: ${JWT_SECRET:-your-secret-key-change-in-production}
+      CLIENT_URL: ${CLIENT_URL:-http://localhost:5173}
+      NODE_ENV: production
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    networks:
+      - delivery-network
+
+volumes:
+  mongodb_data:
+    driver: local
+
+networks:
+  delivery-network:
+    driver: bridge
