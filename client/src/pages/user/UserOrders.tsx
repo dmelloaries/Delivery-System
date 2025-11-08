@@ -4,8 +4,11 @@ import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Package, Truck, CheckCircle2, Clock } from "lucide-react";
 import UserHeader from "@/components/_user/UserHeader";
+import { socketService } from "@/lib/socket";
+import type { OrderStatusUpdate } from "@/lib/socket";
+import { toast } from "sonner";
 
 interface OrderItem {
   id: number;
@@ -55,6 +58,9 @@ const UserOrders = () => {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [updatedOrderIds, setUpdatedOrderIds] = useState<Set<string>>(
+    new Set()
+  );
 
   useEffect(() => {
     const fetchOrders = async () => {
@@ -87,6 +93,139 @@ const UserOrders = () => {
     fetchOrders();
   }, [backendUrl, token]);
 
+  // Initialize Socket.io connection and set up event listeners (once on mount)
+  useEffect(() => {
+    const authToken = token || localStorage.getItem("token");
+
+    if (!authToken) {
+      console.warn("⚠️ No auth token found, skipping socket connection");
+      return;
+    }
+
+    console.log("🔌 Initializing socket connection for user...");
+    const socket = socketService.connect(authToken);
+
+    // Set up event listeners for order status updates
+    const handleOrderStatusUpdate = (data: OrderStatusUpdate) => {
+      console.log(" Order status update received:", data);
+      console.log("   Order ID:", data.orderId);
+      console.log("   New Status:", data.status);
+      console.log("   Message:", data.message);
+
+      // Update the order in local state
+      setOrders((prevOrders) => {
+        const updatedOrders = prevOrders.map((order) =>
+          order._id === data.orderId ? { ...order, status: data.status } : order
+        );
+        console.log("   Updated orders in state");
+        return updatedOrders;
+      });
+
+      // Add to updated orders for animation
+      setUpdatedOrderIds((prev) => new Set(prev).add(data.orderId));
+
+      // Remove after animation completes
+      setTimeout(() => {
+        setUpdatedOrderIds((prev) => {
+          const newSet = new Set(prev);
+          newSet.delete(data.orderId);
+          return newSet;
+        });
+      }, 2000);
+
+      // Show toast notification
+      toast.success(data.message, {
+        description: `Order #${data.orderNumber}`,
+      });
+    };
+
+    const handleOrderDelivered = (data: OrderStatusUpdate) => {
+      console.log("🎉 Order delivered:", data);
+
+      // Update order status to delivered
+      setOrders((prevOrders) =>
+        prevOrders.map((order) =>
+          order._id === data.orderId ? { ...order, status: "Delivered" } : order
+        )
+      );
+
+      toast.success("🎉 " + data.message, {
+        description: `Order #${data.orderNumber}`,
+        duration: 5000,
+      });
+    };
+
+    // Register event listeners
+    console.log(" Registering socket event listeners...");
+    socketService.onOrderStatusUpdate(handleOrderStatusUpdate);
+    socketService.onOrderDelivered(handleOrderDelivered);
+
+    const handleConnect = () => {
+      console.log("Socket connected successfully! Socket ID:", socket.id);
+      console.log("   Auth token present:", !!authToken);
+    };
+
+    const handleDisconnect = (reason: string) => {
+      console.warn(" Socket disconnected. Reason:", reason);
+    };
+
+    socket.on("connect", handleConnect);
+    socket.on("disconnect", handleDisconnect);
+
+    // Cleanup on unmount
+    return () => {
+      console.log("🧹 Cleaning up socket listeners...");
+      socketService.offOrderStatusUpdate();
+      socketService.offOrderDelivered();
+      socket.off("connect", handleConnect);
+      socket.off("disconnect", handleDisconnect);
+    };
+  }, [token]); // Only depend on token
+
+  // Join/leave order rooms when orders change
+  useEffect(() => {
+    // Small delay to ensure socket is fully connected
+    const joinRooms = () => {
+      if (!socketService.isConnected()) {
+        console.warn("Socket not connected, retrying in 500ms...");
+        setTimeout(joinRooms, 500);
+        return;
+      }
+
+      if (orders.length === 0) {
+        console.log("ℹ No orders to track");
+        return;
+      }
+
+      console.log(" Joining order rooms for", orders.length, "orders");
+
+      // Join all active order rooms
+      const activeOrders = orders.filter(
+        (order) => order.status !== "Delivered" && order.status !== "Cancelled"
+      );
+
+      console.log(`   Active orders to track: ${activeOrders.length}`);
+
+      activeOrders.forEach((order) => {
+        console.log(` Joining room for order: ${order._id} (Status: ${order.status})`);
+        socketService.joinOrderRoom(order._id);
+      });
+    };
+
+    joinRooms();
+
+    // Cleanup: leave rooms when component unmounts or orders change
+    return () => {
+      console.log(" Leaving order rooms on cleanup...");
+      orders.forEach((order) => {
+        if (order.status !== "Delivered" && order.status !== "Cancelled") {
+          console.log(` Leaving room for order: ${order._id}`);
+          socketService.leaveOrderRoom(order._id);
+        }
+      });
+    };
+  }, [orders]); // Re-run when orders array changes
+
   const getStatusColor = (status: string) => {
     switch (status.toLowerCase()) {
       case "pending":
@@ -112,6 +251,66 @@ const UserOrders = () => {
       hour: "2-digit",
       minute: "2-digit",
     });
+  };
+
+  const getStatusStep = (status: string) => {
+    const steps = ["Pending", "Accepted", "On The Way", "Delivered"];
+    return steps.indexOf(status);
+  };
+
+  const renderOrderTracker = (status: string) => {
+    const steps = [
+      { name: "Pending", icon: Clock },
+      { name: "Accepted", icon: Package },
+      { name: "On The Way", icon: Truck },
+      { name: "Delivered", icon: CheckCircle2 },
+    ];
+
+    const currentStep = getStatusStep(status);
+
+    return (
+      <div className="py-4">
+        <div className="flex items-center justify-between relative">
+          {/* Progress line */}
+          <div className="absolute top-5 left-0 right-0 h-1 bg-gray-200 z-0">
+            <div
+              className="h-full bg-gradient-to-r from-purple-500 to-purple-600 transition-all duration-500"
+              style={{
+                width: `${(currentStep / (steps.length - 1)) * 100}%`,
+              }}
+            />
+          </div>
+
+          {/* Steps */}
+          {steps.map((step, index) => {
+            const Icon = step.icon;
+            const isCompleted = index <= currentStep;
+            const isCurrent = index === currentStep;
+
+            return (
+              <div key={step.name} className="flex flex-col items-center z-10">
+                <div
+                  className={`w-10 h-10 rounded-full flex items-center justify-center transition-all duration-300 ${
+                    isCompleted
+                      ? "bg-gradient-to-br from-purple-500 to-purple-600 text-white shadow-lg"
+                      : "bg-gray-200 text-gray-400"
+                  } ${isCurrent ? "ring-4 ring-purple-200 scale-110" : ""}`}
+                >
+                  <Icon className="w-5 h-5" />
+                </div>
+                <span
+                  className={`text-xs mt-2 font-medium ${
+                    isCompleted ? "text-purple-600" : "text-gray-400"
+                  }`}
+                >
+                  {step.name}
+                </span>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    );
   };
 
   if (loading) {
@@ -170,7 +369,11 @@ const UserOrders = () => {
           {orders.map((order) => (
             <Card
               key={order._id}
-              className="overflow-hidden border-purple-200/50 hover:border-purple-200 transition-colors"
+              className={`overflow-hidden border-purple-200/50 hover:border-purple-200 transition-all ${
+                updatedOrderIds.has(order._id)
+                  ? "ring-2 ring-purple-400 shadow-lg animate-pulse"
+                  : ""
+              }`}
             >
               <CardHeader className="bg-purple-50/30">
                 <div className="flex justify-between items-start">
@@ -198,6 +401,20 @@ const UserOrders = () => {
               </CardHeader>
 
               <CardContent className="pt-6">
+                {/* Live Order Status Tracker */}
+                {order.status !== "Cancelled" && (
+                  <div className="mb-6 pb-6 border-b border-purple-200/40">
+                    <h4 className="text-sm font-semibold text-gray-700 mb-4">
+                      Order Status
+                      {order.status !== "Delivered" && (
+                        <span className="ml-2 text-xs text-purple-600 animate-pulse">
+                          • Live
+                        </span>
+                      )}
+                    </h4>
+                    {renderOrderTracker(order.status)}
+                  </div>
+                )}
                 {/* Order Items */}
                 <div className="space-y-4 mb-4">
                   {order.items.map((item) => (
@@ -213,12 +430,12 @@ const UserOrders = () => {
                           {item.category}
                         </p>
                         <p className="text-sm text-gray-700 mt-1">
-                          ${item.price.toFixed(2)} × {item.quantity}
+                          ₹{item.price.toFixed(2)} × {item.quantity}
                         </p>
                       </div>
                       <div className="text-right">
                         <p className="font-semibold">
-                          ${(item.price * item.quantity).toFixed(2)}
+                          ₹{(item.price * item.quantity).toFixed(2)}
                         </p>
                       </div>
                     </div>
@@ -245,7 +462,7 @@ const UserOrders = () => {
                 <div className="border-t border-purple-200/40 pt-4 flex justify-between items-center">
                   <span className="font-semibold text-lg">Total Amount:</span>
                   <span className="font-bold text-2xl text-green-600">
-                    ${order.totalAmount.toFixed(2)}
+                    ₹{order.totalAmount.toFixed(2)}
                   </span>
                 </div>
               </CardContent>

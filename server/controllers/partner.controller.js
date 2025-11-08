@@ -334,28 +334,37 @@ export const updateOrderStatus = async (req, res) => {
       const statusMessages = {
         "On The Way":
           "Great news! Your order is on the way and will arrive soon!",
-        Delivered:
-          "Your order has been delivered successfully. Enjoy your meal!",
+        Delivered: "Your order has been delivered successfully. !",
         Cancelled: "Your order has been cancelled by the partner.",
       };
 
-      // Notify the customer in order room
-      req.io.to(`order-${order._id}`).emit("order-status-update", {
+      const updateData = {
         orderId: order._id,
         orderNumber: order.orderNumber,
         status: order.status,
         message: statusMessages[status] || `Your order is now ${status}`,
         timestamp: new Date(),
+      };
+
+      console.log("📡 Broadcasting order status update:", {
+        orderRoom: `order-${order._id}`,
+        userRoom: `user-${order.user}`,
+        status: order.status,
+        io: !!req.io,
+        connectedSockets: req.io.sockets.sockets.size,
       });
 
+      // Notify the customer in order room
+      const orderRoomEmit = req.io
+        .to(`order-${order._id}`)
+        .emit("order-status-update", updateData);
+      console.log(` Emitted to order room: order-${order._id}`);
+
       // Notify customer in their personal room
-      req.io.to(`user-${order.user}`).emit("order-status-update", {
-        orderId: order._id,
-        orderNumber: order.orderNumber,
-        status: order.status,
-        message: statusMessages[status] || `Your order is now ${status}`,
-        timestamp: new Date(),
-      });
+      const userRoomEmit = req.io
+        .to(`user-${order.user}`)
+        .emit("order-status-update", updateData);
+      console.log(` Emitted to user room: user-${order.user}`);
 
       // If delivered, send a special completion notification
       if (status === "Delivered") {
@@ -365,7 +374,12 @@ export const updateOrderStatus = async (req, res) => {
           message: "Thank you for your order! We hope you enjoy it!",
           timestamp: new Date(),
         });
+        console.log(` Emitted order-delivered to user-${order.user}`);
       }
+    } else {
+      console.error(
+        " req.io is not available - Socket.IO not initialized properly!"
+      );
     }
 
     res.json({

@@ -32,23 +32,32 @@ app.get("/", (req, res) => {
   });
 });
 
-// API Routes
-app.use("/api/users", userRoutes);
-app.use("/api/partners", partnerRoutes);
-app.use("/api/admin", adminRoutes);
-
-// Error handling middleware
-app.use((err, req, res, next) => {
-  console.error("Error:", err);
-  res.status(err.status || 500).json({
-    message: err.message || "Internal Server Error",
-    ...(process.env.NODE_ENV === "development" && { stack: err.stack }),
+// Function to set up routes with io instance
+export const setupRoutes = (io) => {
+  // Middleware to attach io to request object
+  app.use((req, res, next) => {
+    req.io = io;
+    next();
   });
-});
 
-// 404 handler
-app.use((req, res) => {
-  res.status(404).json({ message: "Route not found" });
-});
+  // API Routes (mounted after io middleware)
+  app.use("/api/users", userRoutes);
+  app.use("/api/partners", partnerRoutes);
+  app.use("/api/admin", adminRoutes);
+
+  // Error handling middleware
+  app.use((err, req, res, next) => {
+    console.error("Error:", err);
+    res.status(err.status || 500).json({
+      message: err.message || "Internal Server Error",
+      ...(process.env.NODE_ENV === "development" && { stack: err.stack }),
+    });
+  });
+
+
+  app.use((req, res) => {
+    res.status(404).json({ message: "Route not found" });
+  });
+};
 
 export default app;

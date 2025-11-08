@@ -7,11 +7,11 @@ import orderModel from "./models/order.model.js";
 let io;
 
 export const initSocket = (server) => {
-  const io = new Server(server, {
+  io = new Server(server, {
     cors: {
       origin: [
-        "http://localhost:5173", // your React frontend (Vite)
-        "http://127.0.0.1:5500", // your local HTML file (Live Server)
+        "http://localhost:5173", 
+        "http://127.0.0.1:5500", 
       ],
       methods: ["GET", "POST"],
       credentials: true,
@@ -66,13 +66,15 @@ export const initSocket = (server) => {
     // Join order tracking room (for users tracking their orders)
     socket.on("join-order-room", (orderId) => {
       socket.join(`order-${orderId}`);
-      console.log(`User ${socket.userId} joined order room: ${orderId}`);
+      console.log(` User ${socket.userId} (${socket.userRole}) joined order room: order-${orderId}`);
+      console.log(`   Current rooms for this socket:`, Array.from(socket.rooms));
     });
 
     // Leave order tracking room
     socket.on("leave-order-room", (orderId) => {
       socket.leave(`order-${orderId}`);
-      console.log(`User ${socket.userId} left order room: ${orderId}`);
+      console.log(` User ${socket.userId} (${socket.userRole}) left order room: order-${orderId}`);
+      console.log(`   Current rooms for this socket:`, Array.from(socket.rooms));
     });
 
     // Partners can join a general room to listen for new orders

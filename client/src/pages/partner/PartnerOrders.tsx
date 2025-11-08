@@ -1,10 +1,11 @@
 import { Button } from "@/components/ui/button";
 import { HyperText } from "@/components/ui/hyper-text";
 import { useUserStore } from "@/context/useUserStore";
-import { ArrowLeft } from "lucide-react";
-import React, { useEffect, useState } from "react";
+import { ArrowLeft, Package, Truck, CheckCircle2, XCircle } from "lucide-react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
+import { socketService } from "@/lib/socket";
 
 interface OrderItem {
   id: number;
@@ -46,6 +47,7 @@ const PartnerOrders = () => {
   const { token } = useUserStore();
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
+  const [updatingOrderId, setUpdatingOrderId] = useState<string | null>(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -81,6 +83,90 @@ const PartnerOrders = () => {
       fetchOrders();
     }
   }, [backendUrl, token]);
+
+  // Initialize Socket.io connection
+  useEffect(() => {
+    if (token) {
+      socketService.connect(token);
+
+      // Listen for order claimed events from other partners
+      socketService.onOrderClaimed((data) => {
+        setOrders((prevOrders) =>
+          prevOrders.filter((order) => order._id !== data.orderId)
+        );
+      });
+
+      return () => {
+        socketService.offOrderClaimed();
+      };
+    }
+  }, [token]);
+
+  const updateOrderStatus = async (orderId: string, newStatus: string) => {
+    try {
+      setUpdatingOrderId(orderId);
+      const response = await fetch(
+        `${backendUrl}/api/partners/orders/${orderId}/status`,
+        {
+          method: "PATCH",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ status: newStatus }),
+        }
+      );
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || "Failed to update order status");
+      }
+
+      await response.json();
+
+      // Update local state
+      setOrders((prevOrders) =>
+        prevOrders.map((order) =>
+          order._id === orderId ? { ...order, status: newStatus } : order
+        )
+      );
+
+      toast.success(`Order status updated to ${newStatus}`);
+    } catch (error) {
+      toast.error(
+        error instanceof Error ? error.message : "Failed to update order status"
+      );
+      console.error(error);
+    } finally {
+      setUpdatingOrderId(null);
+    }
+  };
+
+  const getNextStatus = (currentStatus: string) => {
+    switch (currentStatus) {
+      case "Accepted":
+        return "On The Way";
+      case "On The Way":
+        return "Delivered";
+      default:
+        return null;
+    }
+  };
+
+  const getStatusIcon = (status: string) => {
+    switch (status.toLowerCase()) {
+      case "accepted":
+        return <Package className="w-4 h-4" />;
+      case "on the way":
+        return <Truck className="w-4 h-4" />;
+      case "delivered":
+        return <CheckCircle2 className="w-4 h-4" />;
+      case "cancelled":
+        return <XCircle className="w-4 h-4" />;
+      default:
+        return null;
+    }
+  };
 
   const getStatusColor = (status: string) => {
     switch (status.toLowerCase()) {
@@ -226,6 +312,43 @@ const PartnerOrders = () => {
                       </p>
                     </div>
                   </div>
+
+                  {/* Status Update Actions */}
+                  {getNextStatus(order.status) && (
+                    <div className="mt-4 pt-4 border-t border-gray-200">
+                      <div className="flex flex-wrap gap-3 items-center">
+                        <span className="text-sm font-medium text-gray-700">
+                          Update Status:
+                        </span>
+                        <Button
+                          onClick={() =>
+                            updateOrderStatus(
+                              order._id,
+                              getNextStatus(order.status)!
+                            )
+                          }
+                          disabled={updatingOrderId === order._id}
+                          className="bg-purple-600 hover:bg-purple-700 text-white flex items-center gap-2"
+                        >
+                          {getStatusIcon(getNextStatus(order.status)!)}
+                          {updatingOrderId === order._id
+                            ? "Updating..."
+                            : `Mark as ${getNextStatus(order.status)}`}
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+
+                  {order.status === "Delivered" && (
+                    <div className="mt-4 pt-4 border-t border-gray-200">
+                      <div className="flex items-center gap-2 text-green-600">
+                        <CheckCircle2 className="w-5 h-5" />
+                        <span className="font-semibold">
+                          Order Completed Successfully!
+                        </span>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
             ))}
