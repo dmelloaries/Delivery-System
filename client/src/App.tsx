@@ -8,6 +8,7 @@ import PartnerHome from "./pages/partner/PartnerHome";
 import Register from "./pages/Register";
 import UserCart from "./pages/user/UserCart";
 import UserOrders from "./pages/user/UserOrders";
+import AdminProfile from "./pages/admin/AdminProfile";
 
 function App() {
   return (
@@ -19,9 +20,18 @@ function App() {
 
         {/* Role-based Protected Routes */}
         <Route
-          path="/admin"
+          path="/adminHome"
           element={
             <ProtectedRoute allowedRoles={["admin"]} element={<AdminHome />} />
+          }
+        />
+        <Route
+          path="/AdminProfile"
+          element={
+            <ProtectedRoute
+              allowedRoles={["admin"]}
+              element={<AdminProfile />}
+            />
           }
         />
         <Route

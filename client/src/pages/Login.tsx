@@ -109,7 +109,7 @@ export default function Login() {
 
       // Navigate to appropriate dashboard
       if (role === "admin") {
-        navigate("/admin");
+        navigate("/adminHome");
       } else if (role === "partner") {
         navigate("/partner");
       } else {
