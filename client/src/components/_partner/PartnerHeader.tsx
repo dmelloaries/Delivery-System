@@ -38,7 +38,7 @@ const PartnerHeader = () => {
                 className="cursor-pointer"
                 onClick={() => navigate("/PartnerOrders")}
               >
-                My Orders
+                My Orders Status
               </DropdownMenuItem>
               <DropdownMenuItem
                 className="cursor-pointer text-red-600  "
