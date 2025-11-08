@@ -6,7 +6,7 @@ const AdminHome = () => {
     <div>
       <AdminHeader />
       <AdminDashboard />
-      <h1>This is Admin</h1>
+     
     </div>
   );
 };
