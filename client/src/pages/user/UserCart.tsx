@@ -151,7 +151,7 @@ const UserCart = () => {
                                   updateQuantity(item.id, item.quantity - 1)
                                 }
                               >
-                                <Minus className="h-4 w-4" />
+                                <Minus className="h-4 w-4 cursor-pointer" />
                               </Button>
                               <span className="font-semibold w-8 text-center">
                                 {item.quantity}
@@ -164,14 +164,14 @@ const UserCart = () => {
                                   updateQuantity(item.id, item.quantity + 1)
                                 }
                               >
-                                <Plus className="h-4 w-4" />
+                                <Plus className="h-4 w-4 cursor-pointer" />
                               </Button>
                             </div>
 
                             <Button
                               variant="destructive"
                               size="sm"
-                              className="h-8"
+                              className="h-8 cursor-pointer"
                               onClick={() => removeItem(item.id)}
                             >
                               <Trash2 className="h-4 w-4 mr-1" />
@@ -223,7 +223,7 @@ const UserCart = () => {
                     </div>
 
                     <Button
-                      className="w-full bg-purple-600 hover:bg-purple-700"
+                      className="cursor-pointer w-full bg-purple-600 hover:bg-purple-700"
                       size="lg"
                       onClick={handlePlaceOrder}
                       disabled={isPlacingOrder}
@@ -233,7 +233,7 @@ const UserCart = () => {
 
                     <Button
                       variant="outline"
-                      className="w-full"
+                      className="w-full cursor-pointer"
                       onClick={clearCart}
                       disabled={isPlacingOrder}
                     >

@@ -13,6 +13,7 @@ import { HyperText } from "./ui/hyper-text";
 import Footer from "./Footer";
 import { useCartStore } from "@/context/useCartStore";
 import { toast } from "sonner";
+import { useUserStore } from "@/context/useUserStore";
 
 type StoreProduct = {
   id: number;
@@ -53,6 +54,7 @@ const Products = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const { addItem } = useCartStore();
+  const userType = useUserStore((state) => state.userType);
 
   const handleAddToCart = (product: StoreProduct) => {
     addItem({
@@ -170,14 +172,16 @@ const Products = () => {
                     className="h-28 w-28 object-contain"
                     loading="lazy"
                   />
-                  <Button
-                    size="sm"
-                    variant="secondary"
-                    className="absolute cursor-pointer bottom-3 right-3 rounded-full border border-primary bg-background px-5 text-primary hover:bg-primary/10"
-                    onClick={() => handleAddToCart(product)}
-                  >
-                    ADD
-                  </Button>
+                  {userType !== "loggedout" && (
+                    <Button
+                      size="sm"
+                      variant="secondary"
+                      className="absolute cursor-pointer bottom-3 right-3 rounded-full border border-primary bg-background px-5 text-primary hover:bg-primary/10"
+                      onClick={() => handleAddToCart(product)}
+                    >
+                      ADD
+                    </Button>
+                  )}
                 </div>
                 <div className="flex items-baseline gap-2">
                   <span className="text-lg font-semibold text-emerald-600">
