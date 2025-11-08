@@ -1,6 +1,6 @@
 import Header from "@/components/Header";
 import { AnimatedCircularProgressBar } from "@/components/ui/animated-circular-progress-bar";
-import React from "react";
+
 
 const Home = () => {
   return (

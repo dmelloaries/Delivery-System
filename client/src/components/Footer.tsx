@@ -1,4 +1,3 @@
-import React from "react";
 import { HyperText } from "@/components/ui/hyper-text";
 
 const Footer = () => {

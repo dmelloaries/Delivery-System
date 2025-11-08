@@ -1,4 +1,3 @@
-import React from "react";
 import { ComicText } from "./ui/comic-text";
 import { Button } from "./ui/button";
 import { useNavigate } from "react-router-dom";
